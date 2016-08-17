@@ -28,8 +28,8 @@ And we'll be using an R package specifically designed to work with data assertio
 
 ```r
 # install.packages("assertr")
-# devtools::
 library(assertr)
+library(dplyr)
 ```
 
 ## What do we know about the dataset
@@ -71,12 +71,10 @@ stopifnot(1 == 1, all.equal(pi, 3.14159265), 1 < 2) # all TRUE
 stopifnot(gapminder$lifeExp > 0)
 ```
 
-perfectly good way to test data! However, not perfectly flexible, and rather difficult to chain:
+perfectly good way to test data! However, not perfectly flexible, and difficult to chain:
 
 
 ```r
-library(magrittr)
-
 # gapminder %>% 
 #   {stopifnot(.[["lifeExp"]] > 0);stopifnot(.[["pop"]] < 0)}
 ```
@@ -120,7 +118,7 @@ gm2 <- gapminder %>%
   assert(within_bounds(0,Inf), pop)
 ```
 
-### `assert` has the Power of `dplyr::select`
+### `assert` has the power of `dplyr::select`
 
 You can use the same syntax from `dplyr` to select columns in `assertr`. That means less typing!
 
@@ -134,7 +132,7 @@ Let's meet the other handy predicates:
 
 
 ```r
-## let us have a vector of all continents
+## let's create a vector of all continents
 all_continents <- levels(gapminder$continent)
 all_continents
 ```
@@ -145,6 +143,25 @@ all_continents
 
 ```r
 gm2 <- gapminder %>% 
+  ## check for missing values
+  assert(not_na, country:gdpPercap) %>% 
+  ## check that all continents are matching
+  assert(in_set(all_continents), continent) %>% 
+  assert(within_bounds(0, Inf), lifeExp:gdpPercap)
+```
+
+Let's create a new version of gapminder that has some data entry mistakes
+
+```r
+gapminder_mistake <- gapminder 
+
+levels(gapminder_mistake$continent)[levels(gapminder_mistake$continent) == "Africa"] <- "Afrrrrica"
+```
+
+Let's see if we can detect the spelling mistake
+
+```r
+gapminder_mistake %>% 
   ## check for missing values
   assert(not_na, country:gdpPercap) %>% 
   ## check that all continents are matching

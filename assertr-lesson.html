@@ -83,8 +83,8 @@ img {
 <pre class="r"><code>library(gapminder)</code></pre>
 <p>And we’ll be using an R package specifically designed to work with data assertions: <code>assertr</code>, by Tony Fischetti (<a href="https://github.com/tonyfischetti/assertr">github page</a> and <a href="https://vimeo.com/141906295">rOpenSci community call with Tony</a>)</p>
 <pre class="r"><code># install.packages(&quot;assertr&quot;)
-# devtools::
-library(assertr)</code></pre>
+library(assertr)
+library(dplyr)</code></pre>
 </div>
 <div id="what-do-we-know-about-the-dataset" class="section level2">
 <h2>What do we know about the dataset</h2>
@@ -167,10 +167,8 @@ library(assertr)</code></pre>
 <pre class="r"><code>stopifnot(1 == 1, all.equal(pi, 3.14159265), 1 &lt; 2) # all TRUE
 
 stopifnot(gapminder$lifeExp &gt; 0)</code></pre>
-<p>perfectly good way to test data! However, not perfectly flexible, and rather difficult to chain:</p>
-<pre class="r"><code>library(magrittr)
-
-# gapminder %&gt;% 
+<p>perfectly good way to test data! However, not perfectly flexible, and difficult to chain:</p>
+<pre class="r"><code># gapminder %&gt;% 
 #   {stopifnot(.[[&quot;lifeExp&quot;]] &gt; 0);stopifnot(.[[&quot;pop&quot;]] &lt; 0)}</code></pre>
 <p>.. that’s rather awkward.</p>
 <p>Fortunately, we have <code>assertr</code>!</p>
@@ -198,16 +196,27 @@ stopifnot(gapminder$lifeExp &gt; 0)</code></pre>
   assert(within_bounds(0,Inf), pop)</code></pre>
 </div>
 <div id="assert-has-the-power-of-dplyrselect" class="section level3">
-<h3><code>assert</code> has the Power of <code>dplyr::select</code></h3>
+<h3><code>assert</code> has the power of <code>dplyr::select</code></h3>
 <p>You can use the same syntax from <code>dplyr</code> to select columns in <code>assertr</code>. That means less typing!</p>
 <pre class="r"><code>gm2 &lt;- gapminder %&gt;% 
   assert(within_bounds(0, Inf), lifeExp:gdpPercap)</code></pre>
 <p>Let’s meet the other handy predicates:</p>
-<pre class="r"><code>## let us have a vector of all continents
+<pre class="r"><code>## let's create a vector of all continents
 all_continents &lt;- levels(gapminder$continent)
 all_continents</code></pre>
 <pre><code>## [1] &quot;Africa&quot;   &quot;Americas&quot; &quot;Asia&quot;     &quot;Europe&quot;   &quot;Oceania&quot;</code></pre>
 <pre class="r"><code>gm2 &lt;- gapminder %&gt;% 
+  ## check for missing values
+  assert(not_na, country:gdpPercap) %&gt;% 
+  ## check that all continents are matching
+  assert(in_set(all_continents), continent) %&gt;% 
+  assert(within_bounds(0, Inf), lifeExp:gdpPercap)</code></pre>
+<p>Let’s create a new version of gapminder that has some data entry mistakes</p>
+<pre class="r"><code>gapminder_mistake &lt;- gapminder 
+
+levels(gapminder_mistake$continent)[levels(gapminder_mistake$continent) == &quot;Africa&quot;] &lt;- &quot;Afrrrrica&quot;</code></pre>
+<p>Let’s see if we can detect the spelling mistake</p>
+<pre class="r"><code>gapminder_mistake %&gt;% 
   ## check for missing values
   assert(not_na, country:gdpPercap) %&gt;% 
   ## check that all continents are matching
