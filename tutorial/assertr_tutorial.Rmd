@@ -1,0 +1,124 @@
+---
+title: "Data Validation in R with assertr"
+author: "Tutorial"
+output: html_document
+---
+
+## Introduction
+
+This tutorial covers how to use the `assertr` package for validating data in R. `assertr` allows you to assert conditions about your data in a tidyverse-style pipeline. It helps catch issues early in your data processing workflow.
+
+## Learning Objectives
+
+- Understand the role of `assertr` in data validation
+- Use `assert()`, `verify()`, and `insist()` to validate data
+- Interpret and handle validation errors
+- Build tidy pipelines that include robust checks
+
+## Setup
+
+```r
+install.packages("assertr")
+library(assertr)
+library(dplyr)
+```
+
+## Example Dataset
+
+```r
+df <- data.frame(
+  id = 1:6,
+  age = c(25, 40, -1, 60, NA, 32),
+  income = c(40000, 50000, 60000, -30000, 70000, 80000),
+  gender = c("M", "F", "F", "Other", "M", NA)
+)
+```
+
+## Basic Assertions with `verify()`
+
+```r
+df %>%
+  verify(age >= 0)
+```
+
+Multiple conditions:
+
+```r
+df %>%
+  verify(!is.na(age)) %>%
+  verify(age >= 0) %>%
+  verify(income >= 0)
+```
+
+Using helper functions:
+
+```r
+df %>%
+  verify(within_bounds(18, 99), age) %>%
+  verify(within_bounds(0, Inf), income)
+```
+
+## Using `assert()` for Column Checks
+
+```r
+df %>%
+  assert(not_na, age, income) %>%
+  assert(within_bounds(0, Inf), age, income)
+```
+
+Custom predicate example:
+
+```r
+is_valid_gender <- function(x) x %in% c("M", "F")
+
+df %>%
+  assert(is_valid_gender, gender)
+```
+
+## Using `insist()` for Distributional Checks
+
+```r
+df %>%
+  insist(within_n_mads(2), age)
+```
+
+## Handling Validation Failures
+
+Use `error_report()` to summarize rather than stop:
+
+```r
+df %>%
+  assert(not_na, age, error_fun = error_report)
+```
+
+## Practice Exercise
+
+Given a dataset `df`, create a pipeline that:
+
+- Ensures no missing `id`
+- Age is between 0 and 120
+- Income is non-negative
+- Gender is one of "M" or "F"
+
+```r
+df %>%
+  assert(not_na, id) %>%
+  assert(within_bounds(0, 120), age) %>%
+  assert(within_bounds(0, Inf), income) %>%
+  assert(is_valid_gender, gender)
+```
+
+## Summary Table
+
+| Function    | Purpose                              |
+|-------------|--------------------------------------|
+| `verify()`  | Row-wise logical condition check     |
+| `assert()`  | Column-wise predicate check          |
+| `insist()`  | Check based on data distribution     |
+| `within_bounds()` | Helper for numeric checks     |
+| `not_na`    | Built-in predicate for missing data  |
+| `error_report` | Captures failures for review     |
+
+## References
+
+- Schloerke, B. (2023). *assertr: Assertive Programming for R*. [CRAN](https://cran.r-project.org/package=assertr)
