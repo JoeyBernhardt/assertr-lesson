@@ -4,7 +4,7 @@ library(dplyr)
 library(readr)
 
 # Load example data
-df <- read_csv("../data/example_data.csv")
+df <- read_csv("data/example_data.csv")
 
 # Exercise 1: Verify no missing IDs
 df %>%
