@@ -1,5 +1,5 @@
 # assertr-lesson
-O'Connor lab meeting lesson on the R package assertr
+Lab meeting lesson on the R package assertr
 
 [code and examples](https://github.com/JoeyBernhardt/assertr-lesson/blob/master/assertr-lesson.md)
 
